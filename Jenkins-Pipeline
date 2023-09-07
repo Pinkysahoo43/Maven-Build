@@ -38,3 +38,4 @@ node('Slave2-ssh')
  junit 'target/surefire-reports/*.xml'
  }
 }
+}
