@@ -1,31 +1,42 @@
-node('Slave1')
-{
- stage('Slave1 Preparation') 
-{ // for display purposes
- // Get some code from a GitHub repository
- git 'https://github.com/Pinkysahoo43/MavenBuild.git'
- }
- stage('Compile') 
- {
- // Run the maven compile
- sh 'mvn compile'
- }
-}
-node('Slave2-ssh')
-{
- stage('Slave2 Preparation') 
-{ // for display purposes
- // Get some code from a GitHub repository
- git 'https://github.com/Pinkysahoo43/MavenBuild.git'
- } 
- stage('Build') 
- {
- // Run the maven build
- sh 'mvn clean install' 
- }
- stage('Results') 
- {
- sh 'mvn test'
- junit 'target/surefire-reports/*.xml'
- }
+pipeline {
+    agent any
+    tools {
+        maven 'maven3'
+    }
+    stages{
+        
+        stage('checkout'){
+            steps{
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Pinkysahoo43/jenkins-sonar-demo.git']])
+            }    
+        }
+        stage('Build'){
+            steps{
+                echo 'Building Maven project'
+                sh 'mvn clean compile'
+            }
+        }
+        stage('SonarQube Analysis'){
+            steps{
+                echo 'Scanning Maven project'
+                withCredentials([string(credentialsId: 'Sonar', variable: 'SONAR_TOKEN')]) {
+                    withSonarQubeEnv(installationName: 'sonarcloud', credentialsId: 'Sonar') { 
+                        sh 'mvn sonar:sonar -Dsonar.projectKey=bhagyalakshmi_sonardemo -Dsonar.organization=bhagyalakshmi -Dsonar.host.url=https://sonarcloud.io'
+                        sh 'sleep 50'
+                        
+                    }
+                }    
+            }
+        }
+        stage('Test'){
+            steps{
+                echo 'Building Maven project'
+                sh 'mvn test'
+                junit '**/target/surefire-reports/*.xml'
+                jacoco classPattern: '**/target/classes', exclusionPattern: '**/*Test*.class', execPattern: '**/target/jacoco.exec', inclusionPattern: '**/*.class', sourceExclusionPattern: 'generated/**/*.java', sourceInclusionPattern: '**/*.java'
+            }
+        }
+    }
+        
+
 }
