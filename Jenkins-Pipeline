@@ -1,12 +1,3 @@
-pipeline {
-    
-   agent {
-        label 'ssh'
-    }
-
-    tools {
-      maven 'maven3'
-    }
 node('Slave1')
 {
  stage('Slave1 Preparation') 
@@ -37,5 +28,4 @@ node('Slave2-ssh')
  sh 'mvn test'
  junit 'target/surefire-reports/*.xml'
  }
-}
 }
