@@ -1,0 +1,40 @@
+pipeline {
+    
+   agent {
+        label 'ssh'
+    }
+
+    tools {
+      maven 'maven3'
+    }
+node('Slave1')
+{
+ stage('Slave1 Preparation') 
+{ // for display purposes
+ // Get some code from a GitHub repository
+ git 'https://github.com/Pinkysahoo43/MavenBuild.git'
+ }
+ stage('Compile') 
+ {
+ // Run the maven compile
+ sh 'mvn compile'
+ }
+}
+node('Slave2-ssh')
+{
+ stage('Slave2 Preparation') 
+{ // for display purposes
+ // Get some code from a GitHub repository
+ git 'https://github.com/Pinkysahoo43/MavenBuild.git'
+ } 
+ stage('Build') 
+ {
+ // Run the maven build
+ sh 'mvn clean install' 
+ }
+ stage('Results') 
+ {
+ sh 'mvn test'
+ junit 'target/surefire-reports/*.xml'
+ }
+}
